@@ -7,6 +7,12 @@ import nibabel as nib
 import os
 import numpy as np
 
+def min_max(x, axis=None):
+    min = x.min(axis=axis, keepdims=True)
+    max = x.max(axis=axis, keepdims=True)
+    result = (x-min)/(max-min)
+    return result
+
 class CovidDataset(torch.utils.data.Dataset):
     def __init__(self, mode="train", root_dir="dataset", transform=None, channel=1):
         """
@@ -33,7 +39,7 @@ class CovidDataset(torch.utils.data.Dataset):
             print("You should define mode = ['train', 'val', 'test']")
             exit()
 
-        img = np.asanyarray(nii_img.dataobj)
+        img = np.asarray(nii_img.dataobj)
 
         if mode == "train":
             img = img[:, :, :70]
@@ -42,7 +48,7 @@ class CovidDataset(torch.utils.data.Dataset):
             img = img[:, :, 70:]
             label = label[:, : ,70:]
 
-        self.label = label.transpose(2, 0, 1)
+        self.label = label.transpose(2, 0, 1).astype(np.int64)
 
         self._ChangeImgShape(img, channel)
 
@@ -60,6 +66,9 @@ class CovidDataset(torch.utils.data.Dataset):
         self.img = np.asarray(self.img)
         print(self.img.shape)
 
+        self.img = min_max(self.img)
+        print(self.img.shape)
+
     def __len__(self):
         return len(self.img[0, 0])
     
@@ -73,4 +82,4 @@ class CovidDataset(torch.utils.data.Dataset):
         return img, label
 
 if __name__ == "__main__":
-    dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=3)
+    dataset = CovidDataset(mode="val", root_dir="../dataset/", channel=3)
