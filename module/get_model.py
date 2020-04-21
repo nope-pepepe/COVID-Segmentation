@@ -8,10 +8,20 @@ from torchvision import models
 
 def get_model(args, num_classes):
     if args.model == "Deeplab":
-        model = models.segmentation.deeplabv3_resnet101(
-            pretrained=args.pretrained,
-            num_classes=num_classes
-        )
+        if args.pretrained:
+            model = models.segmentation.deeplabv3_resnet101(pretrained=True)
+            num_ftr = model.classifier[-1].in_channels
+            model.classifier[-1] = nn.Conv2d(num_ftr, num_classes,
+                        kernel_size=(1, 1), stride=(1, 1))
+
+            num_ftr_aux = model.aux_classifier[-1].in_channels
+            model.aux_classifier[-1] = nn.Conv2d(num_ftr_aux, num_classes,
+                        kernel_size=(1, 1), stride=(1, 1))
+
+        else:
+            model = models.segmentation.deeplabv3_resnet101(
+                num_classes=num_classes
+            )
     
     else:
         print("no such a model")

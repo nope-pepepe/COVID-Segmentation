@@ -11,7 +11,6 @@ import numpy as np
 import argparse
 import os
 import datetime
-from tqdm import tqdm
 
 import torch
 import torchvision
@@ -116,7 +115,7 @@ def main():
     max_miou = 0.0
     vallogger = LogIoU(savedir)
 
-    for epoch in tqdm(range(args.epoch), desc="epoch"):
+    for epoch in range(args.epoch):
         train(net, trainloader, optimizer, device, criterion, epoch, args)
         iou, miou = validation(net, valloader, device, criterion, args)
         if args.scheduler:
@@ -128,7 +127,7 @@ def main():
 
         vallogger(epoch, miou, iou)
 
-    tqdm.write('Finished Training')
+    print('Finished Training')
 
 if __name__ == "__main__":
     main()
