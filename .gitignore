@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 dataset
-results/
+results/*
 *.sh
