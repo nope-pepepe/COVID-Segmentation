@@ -1,21 +1,29 @@
 # COVID-Segmentation
 ## 概要
 <http://medicalsegmentation.com/covid19/> の画像をセグメンテーションするためのリポジトリ
-現状とりあえずDeeplabv3+(ResNet101)で動きます
+
+現状とりあえずDeeplabv3+(ResNet101)で動きます。
+
 Train:70枚
+
 Validation:30枚
+
 で学習します。
 
 ## 学習方法
-sh train.sh 
+例:python3 main.py -g 0 -e 100 -b 4 -lr 0.001 -o Adam -pre
+
 適宜書き換えてください。
+
 BatchSizeはとりあえず4で9GBくらいメモリ食います。
-メモリ並列できたら嬉しいね(将来的にやるかも)
+
+メモリ並列できたら嬉しい(将来的にやるかも)
 
 ## その他
-Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30*512*512の計算を行っているため)。
+Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30×512×512の計算を行っているため)。
 
 <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html>
+
 このへんのモジュールをmodule/calc_iou.pyのconfusion matrix計算関数あたりと入れ替えたら早くなるかも
 
 ## 精度
