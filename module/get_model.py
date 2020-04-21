@@ -7,14 +7,13 @@ import torchvision
 from torchvision import models
 
 def get_model(args, num_classes):
-    if args.model == "VGG16":
-        model = models.vgg16_bn(pretrained=True)
-        num_ftrs = model.classifier[6].in_features
-        model.classifier[6] = nn.Linear(num_ftrs, num_classes)
+    if args.model == "Deeplab":
+        model = models.segmentation.deeplabv3_resnet101(
+            pretrained=args.pretrained,
+            num_classes=num_classes
+        )
     
-    elif args.model == "ResNet101":
-        model = models.resnet101(pretrained=True)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, num_classes)
-    
+    else:
+        print("no such a model")
+        exit()
     return model
