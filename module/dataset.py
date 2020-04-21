@@ -64,13 +64,12 @@ class CovidDataset(torch.utils.data.Dataset):
                 imgArray.append(img[i])
             self.img.append(imgArray)
         self.img = np.asarray(self.img)
-        print(self.img.shape)
 
-        self.img = min_max(self.img)
+        self.img = min_max(self.img).astype(np.float32)
         print(self.img.shape)
 
     def __len__(self):
-        return len(self.img[0, 0])
+        return len(self.img)
     
     def __getitem__(self, idx):
         img = self.img[idx]
