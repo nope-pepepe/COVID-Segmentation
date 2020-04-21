@@ -20,7 +20,7 @@ BatchSizeはとりあえず4で9GBくらいメモリ食います。
 メモリ並列できたら嬉しい(将来的にやるかも)
 
 ## その他
-Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30*512*512の計算を行っているため)。
+Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30×512×512の計算を行っているため)。
 
 <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html>
 
