@@ -3,7 +3,6 @@
 
 import numpy as np
 import torch
-from tqdm import tqdm
 
 def calc_IoU(pred_label,gt_label, num_classes):
     pred_label = pred_label.flatten()
@@ -16,7 +15,7 @@ def calc_IoU(pred_label,gt_label, num_classes):
 
 def confusion_matrix(nb_classes, preds, label):
     confusion_matrix = torch.zeros(nb_classes, nb_classes)
-    for t, p in zip(tqdm(label.view(-1), desc="confusion"), preds.view(-1)):
+    for t, p in zip(label.view(-1), preds.view(-1)):
         confusion_matrix[t.long(), p.long()] += 1
 
     return confusion_matrix
