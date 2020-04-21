@@ -2,7 +2,7 @@
 # -*- Coding: utf-8 -*-
 
 """
-平成ライダーをクラス分類するコード
+Covid19-Segmentation
 """
 
 #ライブラリのインポート
@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 import os
+import datetime
+from tqdm import tqdm
 
 import torch
 import torchvision
@@ -18,10 +20,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from module.riderlist import RIDER_LIST
-from module.train_val import train, validation, test
-from module.dataset import RiderDataset
+from module.train_val import train, validation
+from module.dataset import CovidDataset
 from module.get_model import get_model
+from module.classes import CLASSES
+from module.logger import LogIoU
 
 def main():
     parser = argparse.ArgumentParser()
@@ -29,22 +32,31 @@ def main():
     parser.add_argument("-e", "--epoch", type=int, default=100, help="データセット周回数")
     parser.add_argument("-b", "--batchsize", type=int, default=16, help="ミニバッチサイズ")
     parser.add_argument("-lr", "--learningrate", type=float, default=0.001, help="学習率")
-    parser.add_argument("-s", "--split", type=int, default=1, help="Train-Split")
-    parser.add_argument("-m", "--model", type=str, default="VGG16",
-                        choices=["VGG16", "ResNet101"])
+    parser.add_argument("-m", "--model", type=str, default="Deeplab",
+                        choices=["Deeplab"])
     parser.add_argument("-o", "--optimizer", type=str, default="SGD",
                         choices=["SGD", "Adam"])
     parser.add_argument("--scheduler", action="store_true", help="Use Scheduler")
+    parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
     parser.add_argument("--step", type=int, default=10, help="schedulerのStep(何Epoch毎に減衰させるか)")
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
-    parser.add_argument("--csv_path", type=str, default="rider-dataset/splits", help="csv_splitまでのパス")
-    parser.add_argument("--root_dir", type=str, default="rider-dataset", help="データセットまでのパス")
+    parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
     parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
 
     args = parser.parse_args()
 
     device = torch.device("cuda:{}".format(args.gpu))   #GPUの設定
+
+    classes = CLASSES
+    setattr(args, "num_classes", len(classes))
+
+    # 現在時刻の保存ディレクトリ作成
+    dt_now = datetime.datetime.now()
+    savedir = os.path.join(args.save_dir, 
+                    dt_now.strftime("%Y%m%d_%H%M%S"))
+    os.makedirs(savedir, exist_ok=True)
+    print("make save directory {}".format(savedir))
 
     #画像を正規化する関数の定義
     """
@@ -53,40 +65,30 @@ def main():
     """
     transform = None
 
+    channel = 3 if args.model == "Deeplab" else 1
+
     """
-    データセットの読み込み 初回はデータセットをダウンロードするためネットにつながっている必要あり
-    train=Trueなら学習用画像5万枚読み込み
-    train=Falseならテスト用画像1万枚読み込み
     batchsizeは学習時に一度に扱う枚数
     shuffleは画像をランダムに並び替えるかの設定 test時はオフ
     num_workersはCPU使用数みたいなもの 気にしないで良い
     """
-    trainset = RiderDataset(csv_file=os.path.join(args.csv_path,
-                            "train_{}.csv".format(args.split)),
+    trainset = CovidDataset(mode="train",
                             root_dir=args.root_dir,
-                            transform=transform)
+                            transform=transform,
+                            channel=channel)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batchsize,
                                             shuffle=True, num_workers=args.num_worker)
 
-    valset = RiderDataset(csv_file=os.path.join(args.csv_path,
-                            "val_{}.csv".format(args.split)),
+    valset = CovidDataset(mode="val",
                             root_dir=args.root_dir,
-                            transform=transform)
+                            transform=transform,
+                            channel=channel)
     valloader = torch.utils.data.DataLoader(valset, batch_size=args.batchsize,
                                             shuffle=False, num_workers=args.num_worker)
     
-    testset = RiderDataset(csv_file=os.path.join(args.csv_path,
-                            "test_{}.csv".format(args.split)),
-                            root_dir=args.root_dir,
-                            transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batchsize,
-                                            shuffle=False, num_workers=args.num_worker)
-
-    classes = RIDER_LIST
-    
     #ネットワークの定義
     #net(input)とすることで画像をネットワークに入力できる
-    net = get_model(args, len(classes))
+    net = get_model(args, args.num_classes)
     net = net.to(device)    #modelをGPUに送る
 
     """
@@ -101,7 +103,7 @@ def main():
     elif args.optimizer == "Adam":
         optimizer = optim.Adam(net.parameters(), lr=args.learningrate)
     else:
-        print("Cant set optimizer")
+        print("Can't set optimizer")
         exit()
     
     if args.scheduler:
@@ -111,26 +113,22 @@ def main():
     ここから訓練ループ
     epoch       :同じデータに対し繰り返し学習を行う回数。
     """
-    max_acc = 0.0
+    max_miou = 0.0
+    vallogger = LogIoU(savedir)
 
-    for epoch in range(args.epoch):
+    for epoch in tqdm(range(args.epoch), desc="epoch"):
         train(net, trainloader, optimizer, device, criterion, epoch, args)
-        val_accuracy = validation(net, valloader, device, criterion, args)
+        iou, miou = validation(net, valloader, device, criterion, args)
         if args.scheduler:
             scheduler.step()
 
         #validationの成績が良ければモデルを保存
-        if val_accuracy > max_acc:
-            torch.save(net.state_dict(), os.path.join(args.save_dir, args.modelname))
+        if miou > max_miou:
+            torch.save(net.state_dict(), os.path.join(savedir, args.modelname))
 
-    print('Finished Training')
+        vallogger(epoch, miou, iou)
 
-    """
-    ここからは学習したモデルで出力の確認
-    """
-    net.load_state_dict(torch.load(args.modelname))
-
-    test(net, device, testloader, args, classes)
+    tqdm.write('Finished Training')
 
 if __name__ == "__main__":
     main()
