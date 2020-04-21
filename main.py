@@ -23,7 +23,7 @@ from module.train_val import train, validation
 from module.dataset import CovidDataset
 from module.get_model import get_model
 from module.classes import CLASSES
-from module.logger import LogIoU
+from module.logger import LogIoU, logOption
 
 def main():
     parser = argparse.ArgumentParser()
@@ -56,6 +56,7 @@ def main():
                     dt_now.strftime("%Y%m%d_%H%M%S"))
     os.makedirs(savedir, exist_ok=True)
     print("make save directory {}".format(savedir))
+    logOption(savedir, args)
 
     #画像を正規化する関数の定義
     """
