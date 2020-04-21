@@ -8,7 +8,7 @@ class LogIoU:
         self.filename = os.path.join(savedir, "{}.csv".format(name))
     
     def __call__(self, epoch, miou, iou):
-        sIoU = [str(i) for i in (iou)]
+        sIoU = [str(i.item()) for i in (iou)]
         string = '%d\t%f\t'%(epoch,miou)+'\t'.join(sIoU) + '\n'
         with open(self.filename, mode="a") as f:
             f.write(string)
