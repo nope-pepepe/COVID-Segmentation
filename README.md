@@ -26,6 +26,15 @@ BatchSizeはとりあえず4で9GBくらいメモリ食います。
 | Deeplabv3(pre) | 57.6 | 99.1 |    54.6    | 68.5 |  8.1 |
 | Deeplabv3      | 59.5 | 98.4 |    67.3    | 72.2 |  0.0 |
 
+## 出力例
+
+<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/gt_001.jpg?raw=true" alt="gt1" title="gt1" width="200" height="200">
+<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/pred_001.jpg?raw=true" alt="pred1" title="pred1" width="200" height="200"><br>
+
+<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/gt_002.jpg?raw=true" alt="gt2" title="gt2" width="200" height="200">
+<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/pred_002.jpg?raw=true" alt="pred2" title="pred2" width="200" height="200">
+
+←GT　予測→
 ## 結果表示コード
 demo.py -r [ディレクトリ名]
 
@@ -37,5 +46,3 @@ Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕�
 <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html>
 
 このへんのモジュールをmodule/calc_iou.pyのconfusion matrix計算関数あたりと入れ替えたら早くなるかも
-
-※何か画像が90度回転 & 左右反転してます。将来的に対応したい
