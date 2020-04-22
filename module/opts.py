@@ -15,6 +15,7 @@ def train_opts():
                         choices=["SGD", "Adam"])
     parser.add_argument("--scheduler", action="store_true", help="Use Scheduler")
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
+    parser.add_argument("--weight", action="store_true", help="Use class weight")
     parser.add_argument("--step", type=int, default=10, help="schedulerのStep(何Epoch毎に減衰させるか)")
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
