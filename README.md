@@ -19,13 +19,6 @@ BatchSizeはとりあえず4で9GBくらいメモリ食います。
 
 メモリ並列できたら嬉しい(将来的にやるかも)
 
-## その他
-Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30×512×512の計算を行っているため)。
-
-<https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html>
-
-このへんのモジュールをmodule/calc_iou.pyのconfusion matrix計算関数あたりと入れ替えたら早くなるかも
-
 ## ValidationIoU(%)
 
 |                | mIoU | 背景 | すりガラス | 統合 | 胸水 |
@@ -34,4 +27,15 @@ Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕�
 | Deeplabv3      | 59.5 | 98.4 |    67.3    | 72.2 |  0.0 |
 
 ## 結果表示コード
-工事中
+demo.py -r [ディレクトリ名]
+
+ディレクトリ名は2020~みたいなやつだけ指定すれば大丈夫です。
+
+## その他
+Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30×512×512の計算を行っているため)。
+
+<https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html>
+
+このへんのモジュールをmodule/calc_iou.pyのconfusion matrix計算関数あたりと入れ替えたら早くなるかも
+
+※何か画像が90度回転 & 左右反転してます。将来的に対応したい
