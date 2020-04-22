@@ -23,6 +23,7 @@ class CovidDataset(torch.utils.data.Dataset):
         """
         print("start loading {} dataset".format(mode))
         self.transform = transform
+        self.mode = mode
 
         # 画像の読み込み
         if mode == "train" or mode == "val":
@@ -48,7 +49,8 @@ class CovidDataset(torch.utils.data.Dataset):
             img = img[:, :, 70:]
             label = label[:, : ,70:]
 
-        self.label = label.transpose(2, 0, 1).astype(np.int64)
+        if mode != "test":
+            self.label = label.transpose(2, 0, 1).astype(np.int64)
 
         self._ChangeImgShape(img, channel)
 
@@ -73,12 +75,16 @@ class CovidDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, idx):
         img = self.img[idx]
-        label = self.label[idx]
 
         if self.transform:
             img = self.transform(img)
         
-        return img, label
+        if self.mode != "test":
+            label = self.label[idx]
+            return img, label
+
+        else:
+            return img
 
 if __name__ == "__main__":
-    dataset = CovidDataset(mode="val", root_dir="../dataset/", channel=3)
+    dataset = CovidDataset(mode="test", root_dir="../dataset/", channel=3)
