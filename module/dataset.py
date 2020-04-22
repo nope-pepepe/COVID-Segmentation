@@ -87,6 +87,18 @@ class CovidDataset(torch.utils.data.Dataset):
 
         return imgArray, labelArray
 
+    def get_weight(self):
+        num_classes = self.label.max()+1
+        weights = torch.zeros(num_classes)
+        for i in range(num_classes):
+            num_pix = np.count_nonzero(self.label==i)
+            weights[i] = num_pix
+
+        weights /= weights.min()
+        weights = 1 / weights
+        print("class weight:" + weights)
+        return weights
+
     def __len__(self):
         return len(self.img)
     
@@ -104,4 +116,5 @@ class CovidDataset(torch.utils.data.Dataset):
             return img
 
 if __name__ == "__main__":
-    dataset = CovidDataset(mode="test", root_dir="../dataset/", channel=3)
+    dataset = CovidDataset(mode="val", root_dir="../dataset/", channel=3)
+    dataset.get_weight()
