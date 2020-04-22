@@ -27,10 +27,10 @@ def demo(model, dataloader, device, args):
     rootdir = os.path.join(args.save_dir, args.readdir)
     pred_dir = os.path.join(rootdir, "pred")
     inputs_dir = os.path.join(rootdir, "inputs")
-    #gt_dir = os.apth.join(rootdir, "gt")
+    gt_dir = os.path.join(rootdir, "gt")
     os.makedirs(pred_dir, exist_ok=True)
     os.makedirs(inputs_dir, exist_ok=True)
-    #os.makedirs(gt_dir, exist_ok=True)
+    os.makedirs(gt_dir, exist_ok=True)
 
     model.eval()    #モデル推論モードへ移行
 
@@ -45,16 +45,25 @@ def demo(model, dataloader, device, args):
             palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
             colors = torch.as_tensor([i for i in range(args.num_classes)])[:, None] * palette
             colors = (colors % 255).numpy().astype("uint8")
+            
+            # 予測
             pred_img = Image.fromarray(output_pred.byte().cpu().numpy())#.resize(inputs.size())
             pred_img.putpalette(colors)
             pred_img = pred_img.convert("RGB")
             save_path = os.path.join(pred_dir, "img_{:0=3}.jpg".format(i))
             pred_img.save(save_path, quality=95)
             
+            # label
+            labels = labels.squeeze(0)
+            gt_img = Image.fromarray(labels.byte().cpu().numpy())#.resize(inputs.size())
+            gt_img.putpalette(colors)
+            gt_img = gt_img.convert("RGB")
+            save_path = os.path.join(gt_dir, "gt_{:0=3}.jpg".format(i))
+            gt_img.save(save_path, quality=95)
+
             inputs = inputs.squeeze(0)
             inputs *= 255
             inputs = inputs.cpu().numpy().astype(np.uint8).transpose(1, 2, 0)
-            print(inputs)
             inputs_img = Image.fromarray(inputs)
             inputs_img.save(os.path.join(inputs_dir, "img_{:0=3}.jpg".format(i)), quality=95)
             print(save_path)
