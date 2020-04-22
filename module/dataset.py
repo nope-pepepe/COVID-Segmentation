@@ -96,7 +96,7 @@ class CovidDataset(torch.utils.data.Dataset):
 
         weights /= weights.min()
         weights = 1 / weights
-        print("class weight:" + weights)
+        print("class weight:" + str(weights))
         return weights
 
     def __len__(self):
