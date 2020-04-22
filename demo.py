@@ -27,10 +27,12 @@ def demo(model, dataloader, device, args):
     rootdir = os.path.join(args.save_dir, args.readdir)
     pred_dir = os.path.join(rootdir, "pred")
     inputs_dir = os.path.join(rootdir, "inputs")
-    #gt_dir = os.apth.join(rootdir, "gt")
+    gt_dir = os.path.join(rootdir, "gt")
+    bl_dir = os.path.join(rootdir, "blend")
     os.makedirs(pred_dir, exist_ok=True)
     os.makedirs(inputs_dir, exist_ok=True)
-    #os.makedirs(gt_dir, exist_ok=True)
+    os.makedirs(gt_dir, exist_ok=True)
+    os.makedirs(bl_dir, exist_ok=True)
 
     model.eval()    #モデル推論モードへ移行
 
@@ -42,21 +44,44 @@ def demo(model, dataloader, device, args):
             output_pred = output.argmax(0)
             
             # create a color pallette, selecting a color for each class
+            """
             palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
+            print(palette)
             colors = torch.as_tensor([i for i in range(args.num_classes)])[:, None] * palette
             colors = (colors % 255).numpy().astype("uint8")
+            print(colors)
+            """
+            colors = np.asarray([[0,0,0],
+                                 [255,0,0],
+                                 [0,255,0],
+                                 [0,0,255]]).astype("uint8")
+
+            # 予測
             pred_img = Image.fromarray(output_pred.byte().cpu().numpy())#.resize(inputs.size())
             pred_img.putpalette(colors)
             pred_img = pred_img.convert("RGB")
             save_path = os.path.join(pred_dir, "img_{:0=3}.jpg".format(i))
             pred_img.save(save_path, quality=95)
             
+            # label
+            labels = labels.squeeze(0)
+            gt_img = Image.fromarray(labels.byte().cpu().numpy())#.resize(inputs.size())
+            gt_img.putpalette(colors)
+            gt_img = gt_img.convert("RGB")
+            save_path = os.path.join(gt_dir, "gt_{:0=3}.jpg".format(i))
+            gt_img.save(save_path, quality=95)
+
+            # 入力画像
             inputs = inputs.squeeze(0)
             inputs *= 255
             inputs = inputs.cpu().numpy().astype(np.uint8).transpose(1, 2, 0)
-            print(inputs)
             inputs_img = Image.fromarray(inputs)
             inputs_img.save(os.path.join(inputs_dir, "img_{:0=3}.jpg".format(i)), quality=95)
+            
+            bl_pred = Image.blend(inputs_img, pred_img, 0.5)
+            bl_gt = Image.blend(inputs_img, gt_img, 0.5)
+            bl_pred.save(os.path.join(bl_dir, "pred_{:0=3}.jpg".format(i)), quality=95)
+            bl_gt.save(os.path.join(bl_dir, "gt_{:0=3}.jpg".format(i)), quality=95)
             print(save_path)
 
 def main():
