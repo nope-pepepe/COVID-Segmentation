@@ -68,7 +68,24 @@ class CovidDataset(torch.utils.data.Dataset):
         self.img = np.asarray(self.img)
 
         self.img = min_max(self.img).astype(np.float32)
+
+        self.img, self.label = self._rot(self.img, self.label)
         print(self.img.shape)
+
+    def _rot(self, img, label):
+        imgArray = img
+        labelArray = label
+
+        for i in range(len(img)):
+            for j in range(3):
+                imgArray[i, j] = np.fliplr(np.rot90(img[i, j], k=3))
+    
+            labelArray[i] = np.fliplr(np.rot90(label[i], k=3))
+
+        #print(imgArray)
+        #print(labelArray.shape)
+
+        return imgArray, labelArray
 
     def __len__(self):
         return len(self.img)
