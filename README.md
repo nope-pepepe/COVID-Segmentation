@@ -28,11 +28,9 @@ BatchSizeはとりあえず4で9GBくらいメモリ食います。
 
 ## 出力例
 
-<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/gt_001.jpg?raw=true" alt="gt1" title="gt1" width="200" height="200">
-<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/pred_001.jpg?raw=true" alt="pred1" title="pred1" width="200" height="200"><br>
+<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/gt_001.jpg?raw=true" alt="gt1" title="gt1" width="200" height="200"><img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/pred_001.jpg?raw=true" alt="pred1" title="pred1" width="200" height="200"><br>
 
-<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/gt_002.jpg?raw=true" alt="gt2" title="gt2" width="200" height="200">
-<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/pred_002.jpg?raw=true" alt="pred2" title="pred2" width="200" height="200">
+<img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/gt_002.jpg?raw=true" alt="gt2" title="gt2" width="200" height="200"><img src="https://github.com/nope-pepepe/COVID-Segmentation/blob/master/images/pred_002.jpg?raw=true" alt="pred2" title="pred2" width="200" height="200">
 
 ←GT　予測→
 ## 結果表示コード
