@@ -6,6 +6,8 @@ import torch.nn as nn
 import torchvision
 from torchvision import models
 
+from module.unet import UNet
+
 def get_model(args, num_classes):
     if args.model == "Deeplab":
         if args.pretrained:
@@ -22,6 +24,8 @@ def get_model(args, num_classes):
             model = models.segmentation.deeplabv3_resnet101(
                 num_classes=num_classes
             )
+    elif args.model == "UNet":
+        model = UNet(1, num_classes, dropout=args.dropout)
     
     else:
         print("no such a model")
