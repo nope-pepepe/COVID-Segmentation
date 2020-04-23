@@ -112,7 +112,7 @@ class UNet(nn.Module):
         x = self.up3(x, x2)
         x = self.up4(x, x1)
         logits = self.outc(x)
-        return logits
+        return {"out":logits}
 
 if __name__ == "__main__":
     model = UNet(1, 4, dropout=True)
