@@ -77,7 +77,7 @@ class CovidDataset(torch.utils.data.Dataset):
         labelArray = label
 
         for i in range(len(img)):
-            for j in range(3):
+            for j in range(len(imgArray[0])):
                 imgArray[i, j] = np.fliplr(np.rot90(img[i, j], k=3))
     
             labelArray[i] = np.fliplr(np.rot90(label[i], k=3))
