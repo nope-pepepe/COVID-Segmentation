@@ -32,7 +32,7 @@ def demo_opts():
     parser.add_argument("-g", "--gpu", type=int, default=0, help="使用GPU番号 空き状況はnvidia-smiで調べる")
     parser.add_argument("-b", "--batchsize", type=int, default=1, help="ミニバッチサイズ")
     parser.add_argument("-m", "--model", type=str, default="Deeplab",
-                        choices=["Deeplab"])
+                        choices=["Deeplab", "UNet"])
     parser.add_argument("-r", "--readdir", type=str, default=None, help="読み出すディレクトリ名")
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
@@ -41,5 +41,7 @@ def demo_opts():
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
     
     args = parser.parse_args()
+
+    args.dropout = False
 
     return args
