@@ -13,6 +13,8 @@ def train_opts():
                         choices=["Deeplab", "UNet"])
     parser.add_argument("-o", "--optimizer", type=str, default="SGD",
                         choices=["SGD", "Adam"])
+    parser.add_argument("-l", "--loss", type=str, default="CE",
+                        choices=["CE", "focal"])
     parser.add_argument("--scheduler", action="store_true", help="Use Scheduler")
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
     parser.add_argument("--weight", action="store_true", help="Use class weight")

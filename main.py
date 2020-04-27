@@ -85,7 +85,12 @@ def main():
     """
 
     #SoftmaxCrossEntropyLossを使って誤差計算を行う。計算式はググってください。
-    criterion = nn.CrossEntropyLoss(weight=weight)
+    if args.loss == "CE":
+        criterion = nn.CrossEntropyLoss(weight=weight)
+    elif args.loss == "focal":
+        from module.loss import FocalLoss
+        criterion = FocalLoss()
+    
     #学習器の設定 lr:学習率
     if args.optimizer == "SGD":
         optimizer = optim.SGD(net.parameters(), lr=args.learningrate, momentum=0.9)
