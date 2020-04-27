@@ -33,3 +33,42 @@ class FocalLoss(nn.Module):
         loss = -1 * (1-pt)**self.gamma * logpt
         if self.size_average: return loss.mean()
         else: return loss.sum()
+
+class GetCriterion:
+    def __init__(self, loss, start_weight=None, target=None, n_epoch=None):
+        """
+        loss          : CrossEntropyなどの種類
+        start_weight  : class weight初期値
+        target        : class weightを変化させる場合の最終目標
+        n_epoch       : 最終epoch数
+        """
+        self.loss = loss
+        self.start_weight = start_weight
+        self.target = target
+        self.n_epoch = n_epoch
+        self.step = 0
+
+        if start_weight is not None and target is not None:
+            self.step_weight = (target - start_weight) / n_epoch    
+        else:
+            self.step_weight = None
+
+    def get_weight(self):
+        if self.step < self.n_epoch:
+            weight = self.start_weight + self.step * self.step_weight
+        else:
+            weight = self.target
+        self.step += 1
+        return weight
+
+    def __call__(self):
+        if self.target is not None:
+            weight = self.get_weight()
+        else:
+            weight = self.start_weight
+
+        if self.loss == "CE":
+            criterion = nn.CrossEntropyLoss(weight=weight)
+        elif self.loss == "focal":
+            criterion = FocalLoss()
+        return criterion

@@ -19,6 +19,7 @@ def train_opts():
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
     parser.add_argument("--weight", action="store_true", help="Use class weight")
     parser.add_argument("--weight-softmax", action="store_true", help="Use class weight with softmax")
+    parser.add_argument("--control-weight", action="store_true", help="Use class weight control to softmax value")
     parser.add_argument("--dropout", action="store_true", help="Use Dropout with UNet")
     parser.add_argument("--step", type=int, default=10, help="schedulerのStep(何Epoch毎に減衰させるか)")
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")

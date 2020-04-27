@@ -25,6 +25,7 @@ from module.get_model import get_model
 from module.classes import CLASSES
 from module.logger import LogIoU, logOption
 from module.opts import train_opts
+from module.loss import GetCriterion
 
 def main():
     args = train_opts()
@@ -85,12 +86,10 @@ def main():
     """
 
     #SoftmaxCrossEntropyLossを使って誤差計算を行う。計算式はググってください。
-    if args.loss == "CE":
-        criterion = nn.CrossEntropyLoss(weight=weight)
-    elif args.loss == "focal":
-        from module.loss import FocalLoss
-        criterion = FocalLoss()
-    
+    start_weight = trainset.get_weight(args.weight_softmax) if args.weight else None
+    target_weight = trainset.get_weight(True) if args.control_weight and not args.weight_softmax else None
+    get_criterion = GetCriterion(args.loss, start_weight=start_weight, target=target_weight)
+
     #学習器の設定 lr:学習率
     if args.optimizer == "SGD":
         optimizer = optim.SGD(net.parameters(), lr=args.learningrate, momentum=0.9)
@@ -111,6 +110,8 @@ def main():
     vallogger = LogIoU(savedir)
 
     for epoch in range(args.epoch):
+        criterion = get_criterion()
+
         train(net, trainloader, optimizer, device, criterion, epoch, args)
         iou, miou = validation(net, valloader, device, criterion, args)
         if args.scheduler:
