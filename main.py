@@ -76,7 +76,7 @@ def main():
     net = net.to(device)    #modelをGPUに送る
 
     if args.weight:
-        weight = trainset.get_weight().to(device)
+        weight = trainset.get_weight(args.weight_softmax).to(device)
     else:
         weight = None
 
