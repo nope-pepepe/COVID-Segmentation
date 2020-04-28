@@ -19,7 +19,7 @@ class FocalLoss(nn.Module):
             input = input.contiguous().view(-1,input.size(2))   # N,H*W,C => N*H*W,C
         target = target.view(-1,1)
 
-        logpt = F.log_softmax(input)
+        logpt = F.log_softmax(input, dim=0)
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
         pt = Variable(logpt.data.exp())
@@ -65,13 +65,12 @@ class GetCriterion:
     def __call__(self, device):
         if self.target is not None:
             weight = self.get_weight()
+            weight = weight.to(device)
         else:
             weight = self.start_weight
-
-        weight = weight.to(device)
 
         if self.loss == "CE":
             criterion = nn.CrossEntropyLoss(weight=weight)
         elif self.loss == "focal":
-            criterion = FocalLoss()
+            criterion = FocalLoss(alpha=weight)
         return criterion
