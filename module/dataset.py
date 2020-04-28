@@ -119,4 +119,7 @@ class CovidDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
     dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=3)
-    weights = dataset.get_weight(True)
+    weights = dataset.get_weight()
+    weights_softmax = dataset.get_weight(True)
+    hoge = (weights_softmax - weights) / 100
+    print(hoge)
