@@ -49,7 +49,8 @@ class GetCriterion:
         self.step = 0
 
         if start_weight is not None and target is not None:
-            self.step_weight = (target - start_weight) / n_epoch    
+            self.step_weight = (target - start_weight)
+            self.step_weight /= n_epoch    
         else:
             self.step_weight = None
 
@@ -61,11 +62,13 @@ class GetCriterion:
         self.step += 1
         return weight
 
-    def __call__(self):
+    def __call__(self, device):
         if self.target is not None:
             weight = self.get_weight()
         else:
             weight = self.start_weight
+
+        weight = weight.to(device)
 
         if self.loss == "CE":
             criterion = nn.CrossEntropyLoss(weight=weight)
