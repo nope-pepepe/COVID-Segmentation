@@ -75,9 +75,13 @@ def demo(model, dataloader, device, args):
             inputs = inputs.squeeze(0)
             inputs *= 255
             inputs = inputs.cpu().numpy().astype(np.uint8).transpose(1, 2, 0)
+            if inputs.shape[2] == 1:
+                inputs = np.squeeze(inputs)
             inputs_img = Image.fromarray(inputs)
+            inputs_img = inputs_img.convert("RGB")
             inputs_img.save(os.path.join(inputs_dir, "img_{:0=3}.jpg".format(i)), quality=95)
             
+            print(inputs_img.size)
             bl_pred = Image.blend(inputs_img, pred_img, 0.5)
             bl_gt = Image.blend(inputs_img, gt_img, 0.5)
             bl_pred.save(os.path.join(bl_dir, "pred_{:0=3}.jpg".format(i)), quality=95)

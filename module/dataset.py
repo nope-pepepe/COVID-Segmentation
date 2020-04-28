@@ -87,7 +87,7 @@ class CovidDataset(torch.utils.data.Dataset):
 
         return imgArray, labelArray
 
-    def get_weight(self):
+    def get_weight(self, softmax=False):
         num_classes = self.label.max()+1
         weights = torch.zeros(num_classes)
         for i in range(num_classes):
@@ -96,6 +96,8 @@ class CovidDataset(torch.utils.data.Dataset):
 
         weights /= weights.min()
         weights = 1 / weights
+        if softmax:
+            weights = torch.nn.functional.softmax(weights, dim=0)
         print("class weight:" + str(weights))
         return weights
 
@@ -116,5 +118,8 @@ class CovidDataset(torch.utils.data.Dataset):
             return img
 
 if __name__ == "__main__":
-    dataset = CovidDataset(mode="val", root_dir="../dataset/", channel=3)
-    dataset.get_weight()
+    dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=3)
+    weights = dataset.get_weight()
+    weights_softmax = dataset.get_weight(True)
+    hoge = (weights_softmax - weights) / 100
+    print(hoge)
