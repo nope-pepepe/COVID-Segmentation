@@ -76,19 +76,14 @@ def main():
     net = get_model(args, args.num_classes)
     net = net.to(device)    #modelをGPUに送る
 
-    if args.weight:
-        weight = trainset.get_weight(args.weight_softmax).to(device)
-    else:
-        weight = None
-
     """
     ここから誤差関数の定義
     """
 
-    #SoftmaxCrossEntropyLossを使って誤差計算を行う。計算式はググってください。
+    # class weight設定
     start_weight = trainset.get_weight(args.weight_softmax) if args.weight else None
     target_weight = trainset.get_weight(True) if args.control_weight and not args.weight_softmax else None
-    get_criterion = GetCriterion(args.loss, start_weight=start_weight, target=target_weight)
+    get_criterion = GetCriterion(args.loss, start_weight=start_weight, target=target_weight, n_epoch=args.epoch)
 
     #学習器の設定 lr:学習率
     if args.optimizer == "SGD":
@@ -110,7 +105,7 @@ def main():
     vallogger = LogIoU(savedir)
 
     for epoch in range(args.epoch):
-        criterion = get_criterion()
+        criterion = get_criterion(device)
 
         train(net, trainloader, optimizer, device, criterion, epoch, args)
         iou, miou = validation(net, valloader, device, criterion, args)
