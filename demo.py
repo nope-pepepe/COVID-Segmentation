@@ -10,6 +10,8 @@ import numpy as np
 import argparse
 import os
 from PIL import Image
+import pandas as pd
+import matplotlib.pyplot as plt
 
 import torch
 import torchvision
@@ -22,6 +24,20 @@ from module.dataset import CovidDataset
 from module.get_model import get_model
 from module.classes import CLASSES
 from module.opts import demo_opts
+
+def plot_graph(classes, rootdir, only_miou=True):
+    header = ("miou",) + classes
+    df = pd.read_table(os.path.join(rootdir, "val.csv"), names=header)
+    if only_miou:
+        plt.plot(range(len(df)), df["miou"], marker=",")
+        plt.ylabel("miou")
+    else:
+        for row in header:
+            plt.plot(range(len(df)), df[row], marker=",")
+            plt.ylabel(row)
+    plt.title("Validation IoU")
+    plt.xlabel("epoch")
+    plt.savefig(os.path.join(rootdir, "val.jpg"))
 
 def demo(model, dataloader, device, args):
     rootdir = os.path.join(args.save_dir, args.readdir)
@@ -81,7 +97,6 @@ def demo(model, dataloader, device, args):
             inputs_img = inputs_img.convert("RGB")
             inputs_img.save(os.path.join(inputs_dir, "img_{:0=3}.jpg".format(i)), quality=95)
             
-            print(inputs_img.size)
             bl_pred = Image.blend(inputs_img, pred_img, 0.5)
             bl_gt = Image.blend(inputs_img, gt_img, 0.5)
             bl_pred.save(os.path.join(bl_dir, "pred_{:0=3}.jpg".format(i)), quality=95)
@@ -99,6 +114,8 @@ def main():
 
     classes = CLASSES
     setattr(args, "num_classes", len(classes))
+    rootdir = os.path.join(args.save_dir, args.readdir)
+    plot_graph(classes, rootdir)
 
     channel = 3 if args.model == "Deeplab" else 1
 
