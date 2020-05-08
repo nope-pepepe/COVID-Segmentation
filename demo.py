@@ -27,7 +27,7 @@ from module.opts import demo_opts
 
 def plot_graph(classes, rootdir, only_miou=True):
     header = ("miou",) + classes
-    df = pd.read_table(os.path.join(rootdir, "val.csv"), names=header)
+    df = pd.read_csv(os.path.join(rootdir, "val.csv"), names=header, sep="\t")
     if only_miou:
         plt.plot(range(len(df)), df["miou"], marker=",")
         plt.ylabel("miou")
@@ -38,6 +38,13 @@ def plot_graph(classes, rootdir, only_miou=True):
     plt.title("Validation IoU")
     plt.xlabel("epoch")
     plt.savefig(os.path.join(rootdir, "val.jpg"))
+
+def get_acc(classes, rootdir):
+    header = ("miou",) + classes
+    df = pd.read_table(os.path.join(rootdir, "val.csv"), names=header)
+    max_epoch = df["miou"].idxmax()
+    print("max_epoch:", str(max_epoch))
+    print(df.iloc[max_epoch])
 
 def demo(model, dataloader, device, args):
     rootdir = os.path.join(args.save_dir, args.readdir)
@@ -101,7 +108,8 @@ def demo(model, dataloader, device, args):
             bl_gt = Image.blend(inputs_img, gt_img, 0.5)
             bl_pred.save(os.path.join(bl_dir, "pred_{:0=3}.jpg".format(i)), quality=95)
             bl_gt.save(os.path.join(bl_dir, "gt_{:0=3}.jpg".format(i)), quality=95)
-            print(save_path)
+    
+    print("finished outputs!")
 
 def main():
     args = demo_opts()
@@ -115,6 +123,7 @@ def main():
     classes = CLASSES
     setattr(args, "num_classes", len(classes))
     rootdir = os.path.join(args.save_dir, args.readdir)
+    get_acc(classes, rootdir)
     plot_graph(classes, rootdir)
 
     channel = 3 if args.model == "Deeplab" else 1
