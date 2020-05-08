@@ -82,9 +82,6 @@ class CovidDataset(torch.utils.data.Dataset):
     
             labelArray[i] = np.fliplr(np.rot90(label[i], k=3))
 
-        #print(imgArray)
-        #print(labelArray.shape)
-
         return imgArray, labelArray
 
     def get_weight(self, softmax=False):
