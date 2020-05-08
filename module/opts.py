@@ -26,7 +26,8 @@ def train_opts():
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
     parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
     parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
-
+    parser.add_argument("--use-gain", action="store_true", help="Use GAIN")
+    
     args = parser.parse_args()
 
     return args
