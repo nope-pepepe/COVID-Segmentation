@@ -14,12 +14,13 @@ def min_max(x, axis=None):
     return result
 
 class CovidDataset(torch.utils.data.Dataset):
-    def __init__(self, mode="train", root_dir="dataset", transform=None, channel=1):
+    def __init__(self, mode="train", root_dir="dataset", transform=None, channel=1, mask_img=False):
         """
         mode     : train or val
         root_dir : 画像までのパス
         transform: 変換方法
-        size     : 変換後サイズ
+        channel  : チャンネル数
+        mask_img : GAIN用マスクをするか否か(した場合ラベルは画素単位ではなく画像単位になる)
         """
         print("start loading {} dataset".format(mode))
         self.transform = transform
@@ -50,27 +51,31 @@ class CovidDataset(torch.utils.data.Dataset):
             label = label[:, : ,70:]
 
         if mode != "test":
-            self.label = label.transpose(2, 0, 1).astype(np.int64)
+            label = label.transpose(2, 0, 1).astype(np.int64)
 
-        self._ChangeImgShape(img, channel)
+        self.img, self.label = self._ChangeImgShape(img, label, channel)
+
+        if mask_img:
+            self.img, self.label = self._mask(self.img, self.label)
 
         print("loaded {} images!".format(len(self.img)))
 
-    def _ChangeImgShape(self, img, channel):
+    def _ChangeImgShape(self, img, label, channel):
         img = img.transpose(2, 0, 1) # 512,512,100 → 100, 512, 512
 
-        self.img = []
+        img_list = []
         for i in range(len(img)):
             imgArray = []
             for _ in range(channel):
                 imgArray.append(img[i])
-            self.img.append(imgArray)
-        self.img = np.asarray(self.img)
+            img_list.append(imgArray)
+        img_list = np.asarray(img_list)
 
-        self.img = min_max(self.img).astype(np.float32)
+        img_list = min_max(img_list).astype(np.float32)
 
-        self.img, self.label = self._rot(self.img, self.label)
-        print(self.img.shape)
+        img_list, label = self._rot(img_list, label)
+
+        return img_list, label
 
     def _rot(self, img, label):
         imgArray = img
@@ -83,6 +88,28 @@ class CovidDataset(torch.utils.data.Dataset):
             labelArray[i] = np.fliplr(np.rot90(label[i], k=3))
 
         return imgArray, labelArray
+
+    def _mask(self, imgArray, label):
+        maskArray = []
+        labelArray = [] # 1 or 2 or 3 画像に対するクラスラベルが入る
+        for i in range(len(imgArray)):
+            for classlabel in range(1, 4):
+                img = imgArray[i]
+                # 該当クラスが画像内にあるか確認 胸水とか無いやつがあるため
+                if np.any(label[i] == classlabel):
+                    # 該当クラス以外0でマスクされた画像を作成
+                    # 胸水クラスなら統合・すりガラス部分が0
+                    for x in range(imgArray.shape[1]):
+                        for y in range(imgArray.shape[2]):
+                            if label[i, x, y] != classlabel:
+                                img[x, y] = 0
+                    maskArray.append(img)
+                    labelArray.append(classlabel-1)
+        
+        maskArray = np.asarray(maskArray)
+        labelArray = np.asarray(labelArray)
+
+        return maskArray, labelArray
 
     def get_weight(self, softmax=False):
         num_classes = self.label.max()+1
@@ -115,8 +142,4 @@ class CovidDataset(torch.utils.data.Dataset):
             return img
 
 if __name__ == "__main__":
-    dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=3)
-    weights = dataset.get_weight()
-    weights_softmax = dataset.get_weight(True)
-    hoge = (weights_softmax - weights) / 100
-    print(hoge)
+    dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=3, mask_img=True)
