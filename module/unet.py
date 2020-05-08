@@ -83,11 +83,12 @@ class OutConv(nn.Module):
         return self.conv(x)
 
 class UNet(nn.Module):
-    def __init__(self, n_ch, n_classes, bilinear=False, dropout=True):
+    def __init__(self, n_ch, n_classes, bilinear=False, dropout=True, use_gain=False):
         super(UNet, self).__init__()
         self.n_ch = n_ch
         self.n_classes = n_classes
         self.bilinear = bilinear
+        self.use_gain = use_gain
 
         self.inc = DoubleConv(n_ch, 64, dropout=dropout)
         self.down1 = Down(64, 128, dropout=dropout)
@@ -100,6 +101,7 @@ class UNet(nn.Module):
         self.up3 = Up(256, 128 // factor, bilinear, dropout=dropout)
         self.up4 = Up(128, 64, bilinear, dropout=dropout)
         self.outc = OutConv(64, n_classes)
+        self.classification = OutConv(64, n_classes-1)
 
     def forward(self, x):
         x1 = self.inc(x)
@@ -112,8 +114,12 @@ class UNet(nn.Module):
         x = self.up3(x, x2)
         x = self.up4(x, x1)
         logits = self.outc(x)
-        return {"out":logits}
+        if self.use_gain:
+            classify = F.adaptive_avg_pool2d(self.classification(x), (1, 1)).squeeze()
+            return {"out": logits, "class":classify}
+        else:
+            return {"out":logits}
 
 if __name__ == "__main__":
-    model = UNet(1, 4, dropout=True)
+    model = UNet(1, 4, use_gain=True)
     print(model)
