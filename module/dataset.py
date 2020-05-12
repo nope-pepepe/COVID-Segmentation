@@ -111,9 +111,13 @@ class CovidDataset(torch.utils.data.Dataset):
                             if label[i, x, y] != classlabel and label[i, x, y]!=0:
                                 # if文の0は背景クラス 背景はそのままにする
                                 img[0, x, y] = 0
+                    
+                    segment_label = np.copy(label[i])
+                    segment_label = np.where(segment_label!=classlabel and segment_label!=0, -1, segment_label)
+                    
                     maskArray.append(img)
                     labelArray.append(classlabel-1)
-                    segment_labelArray.append(label[i])
+                    segment_labelArray.append(segment_label)
         
         maskArray = np.asarray(maskArray)
         labelArray = np.asarray(labelArray)
