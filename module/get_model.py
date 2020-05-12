@@ -25,7 +25,7 @@ def get_model(args, num_classes):
                 num_classes=num_classes
             )
     elif args.model == "UNet":
-        model = UNet(1, num_classes, dropout=args.dropout)
+        model = UNet(1, num_classes, dropout=args.dropout, use_gain=args.use_gain)
     
     else:
         print("no such a model")
