@@ -113,7 +113,7 @@ class CovidDataset(torch.utils.data.Dataset):
                                 img[0, x, y] = 0
                     
                     segment_label = np.copy(label[i])
-                    segment_label = np.where(segment_label!=classlabel and segment_label!=0, -1, segment_label)
+                    segment_label = np.where((segment_label!=classlabel) & (segment_label!=0), -1, segment_label)
                     
                     maskArray.append(img)
                     labelArray.append(classlabel-1)
