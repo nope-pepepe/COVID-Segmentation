@@ -60,8 +60,8 @@ def demo(model, dataloader, device, args):
     model.eval()    #モデル推論モードへ移行
 
     with torch.no_grad():   #勾配計算を行わない状態
-        for i, (inputs, labels) in enumerate(dataloader):
-            inputs, labels = inputs.to(device), labels.to(device)
+        for i, data in enumerate(dataloader):
+            inputs, labels = data[0].to(device), data[1].to(device)
             #出力計算
             output = model(inputs)["out"][0]
             output_pred = output.argmax(0)
@@ -131,7 +131,8 @@ def main():
     dataset = CovidDataset(mode="val",
                             root_dir=args.root_dir,
                             transform=None,
-                            channel=channel)
+                            channel=channel,
+                            mask_img=args.use_gain)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batchsize,
                                             shuffle=False, num_workers=args.num_worker)
     

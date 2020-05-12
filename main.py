@@ -60,14 +60,16 @@ def main():
     trainset = CovidDataset(mode="train",
                             root_dir=args.root_dir,
                             transform=transform,
-                            channel=channel)
+                            channel=channel,
+                            mask_img=args.use_gain)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batchsize,
                                             shuffle=True, num_workers=args.num_worker)
 
     valset = CovidDataset(mode="val",
                             root_dir=args.root_dir,
                             transform=transform,
-                            channel=channel)
+                            channel=channel,
+                            mask_img=args.use_gain)
     valloader = torch.utils.data.DataLoader(valset, batch_size=args.batchsize,
                                             shuffle=False, num_workers=args.num_worker)
     
