@@ -104,10 +104,8 @@ class CovidDataset(torch.utils.data.Dataset):
                 img = np.copy(imgArray[i])
                 # 該当クラスが画像内にあるか確認 胸水とか無いやつがあるため
                 if np.any(label[i] == classlabel):
-                    print(np.count_nonzero(label[i]==classlabel))
                     # 該当クラス以外0でマスクされた画像を作成
                     # 胸水クラスなら統合・すりガラス部分が0
-                    print(imgArray.shape)
                     for x in range(imgArray.shape[2]):
                         for y in range(imgArray.shape[3]):
                             if label[i, x, y] != classlabel and label[i, x, y]!=0:
