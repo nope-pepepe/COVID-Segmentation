@@ -2,19 +2,58 @@
 # -*- Coding: utf-8 -*-
 
 import torch
+import torch.nn.functional as F
+import torch.nn as nn
 
 from module.calc_iou import calc_IoU
+
+def mask(pred, inputs, labels):
+    inputs[pred.unsqueeze(1)==labels.unsqueeze(1)] = 0
+    return inputs
+
+def calc_loss(data, model, criterion, device, args, val=False):
+    if args.use_gain:
+        inputs, segment_labels, class_labels = data
+        inputs, segment_labels, class_labels = inputs.to(device), segment_labels.to(device), class_labels.to(device)
+
+        with torch.no_grad():
+            model.eval()
+            outputs_data = model(inputs)
+            segment_outputs_1st, class_outputs = outputs_data["out"], outputs_data["class"]
+            if len(class_outputs.size()) == 1:
+                class_outputs = class_outputs.unsqueeze(0)
+            classloss = nn.CrossEntropyLoss()(class_outputs, class_labels)
+
+            mask_inputs = mask(torch.max(segment_outputs_1st.data, 1)[1], inputs, segment_labels)
+            miningloss = model(mask_inputs)["class"].sigmoid().mean()
+
+        if not val:
+            model.train()
+        segment_outputs_2nd = model(inputs)["out"]
+        segment_loss = criterion(segment_outputs_2nd, segment_labels)
+
+        loss = classloss + miningloss + segment_loss
+
+        outputs = segment_outputs_2nd
+
+    else:
+        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
+        outputs = model(inputs)["out"]
+        loss = criterion(outputs, labels)
+    
+    if val:
+        return loss, outputs
+    else:
+        return loss
 
 def train(model, trainloader, optimizer, device, criterion, epoch, args):
     model.train()   #model訓練モードへ移行
     running_loss = 0.0  #epoch毎の誤差合計
 
-    for i, (inputs, labels) in enumerate(trainloader):
-        inputs, labels = inputs.to(device), labels.to(device)
+    for i, data in enumerate(trainloader):
         #出力計算
-        outputs = model(inputs)["out"]
-        loss = criterion(outputs, labels)
-
+        loss = calc_loss(data, model, criterion, device, args)
         #勾配計算とOptimStep
         optimizer.zero_grad()
         loss.backward()
@@ -28,14 +67,12 @@ def validation(model, valloader, device, criterion, args):
     running_loss = 0.0  #epoch毎の誤差合計
 
     with torch.no_grad():   #勾配計算を行わない状態
-        for i, (inputs, labels) in enumerate(valloader):
-            inputs, labels = inputs.to(device), labels.to(device)
-            #出力計算
-            outputs = model(inputs)["out"]
-            loss = criterion(outputs, labels)
+        for i, data in enumerate(valloader):
+            loss, outputs = calc_loss(data, model, criterion, device, args, val=True)
 
             #iou計算
             _, predicted = torch.max(outputs.data, 1)
+            labels = data[1]
             if i == 0:
                 preds = predicted
                 gt = labels
