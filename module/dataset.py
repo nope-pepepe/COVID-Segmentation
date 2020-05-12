@@ -8,6 +8,10 @@ import os
 import numpy as np
 
 def min_max(x, axis=None):
+    """
+    正規化用関数
+    0~1に正規化する
+    """
     min = x.min(axis=axis, keepdims=True)
     max = x.max(axis=axis, keepdims=True)
     result = (x-min)/(max-min)
@@ -53,10 +57,12 @@ class CovidDataset(torch.utils.data.Dataset):
         if mode != "test":
             label = label.transpose(2, 0, 1).astype(np.int64)
 
-        self.img, self.label = self._ChangeImgShape(img, label, channel)
+        self.img, self.segment_label = self._ChangeImgShape(img, label, channel)
 
         if mask_img:
-            self.img, self.label = self._mask(self.img, self.label)
+            self.img, self.class_label, self.segment_label = self._mask(self.img, self.segment_label)
+        else:
+            self.class_label = None
 
         print("loaded {} images!".format(len(self.img)))
 
@@ -92,30 +98,36 @@ class CovidDataset(torch.utils.data.Dataset):
     def _mask(self, imgArray, label):
         maskArray = []
         labelArray = [] # 1 or 2 or 3 画像に対するクラスラベルが入る
+        segment_labelArray = []
         for i in range(len(imgArray)):
             for classlabel in range(1, 4):
-                img = imgArray[i]
+                img = np.copy(imgArray[i])
                 # 該当クラスが画像内にあるか確認 胸水とか無いやつがあるため
                 if np.any(label[i] == classlabel):
+                    print(np.count_nonzero(label[i]==classlabel))
                     # 該当クラス以外0でマスクされた画像を作成
                     # 胸水クラスなら統合・すりガラス部分が0
-                    for x in range(imgArray.shape[1]):
-                        for y in range(imgArray.shape[2]):
-                            if label[i, x, y] != classlabel:
-                                img[x, y] = 0
+                    print(imgArray.shape)
+                    for x in range(imgArray.shape[2]):
+                        for y in range(imgArray.shape[3]):
+                            if label[i, x, y] != classlabel and label[i, x, y]!=0:
+                                # if文の0は背景クラス 背景はそのままにする
+                                img[0, x, y] = 0
                     maskArray.append(img)
                     labelArray.append(classlabel-1)
+                    segment_labelArray.append(label[i])
         
         maskArray = np.asarray(maskArray)
         labelArray = np.asarray(labelArray)
+        segment_labelArray = np.asarray(segment_labelArray)
 
-        return maskArray, labelArray
+        return maskArray, labelArray, segment_labelArray
 
     def get_weight(self, softmax=False):
-        num_classes = self.label.max()+1
+        num_classes = self.segment_label.max()+1
         weights = torch.zeros(num_classes)
         for i in range(num_classes):
-            num_pix = np.count_nonzero(self.label==i)
+            num_pix = np.count_nonzero(self.segment_label==i)
             weights[i] = num_pix
 
         weights /= weights.min()
@@ -135,8 +147,10 @@ class CovidDataset(torch.utils.data.Dataset):
             img = self.transform(img)
         
         if self.mode != "test":
-            label = self.label[idx]
-            return img, label
+            if self.class_label is not None:
+                return img, self.segment_label[idx], self.class_label[idx]
+            else:
+                return img, self.segment_label[idx]
 
         else:
             return img
