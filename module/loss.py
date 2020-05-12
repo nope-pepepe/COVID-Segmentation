@@ -65,9 +65,9 @@ class GetCriterion:
     def __call__(self, device):
         if self.target is not None:
             weight = self.get_weight()
-            weight = weight.to(device)
         else:
             weight = self.start_weight
+        weight = weight.to(device)
 
         if self.loss == "CE":
             criterion = nn.CrossEntropyLoss(weight=weight)
