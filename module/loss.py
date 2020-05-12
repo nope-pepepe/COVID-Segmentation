@@ -72,7 +72,7 @@ class GetCriterion:
             weight = weight.to(device)
 
         if self.loss == "CE":
-            criterion = nn.CrossEntropyLoss(weight=weight)
+            criterion = nn.CrossEntropyLoss(weight=weight, ignore_index=-1)
         elif self.loss == "focal":
             criterion = FocalLoss(alpha=weight)
         return criterion
