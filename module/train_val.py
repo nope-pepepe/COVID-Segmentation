@@ -12,7 +12,9 @@ def mask(pred, inputs, labels):
     return inputs
 
 def calc_loss(data, model, criterion, device, args, val=False):
-    if args.use_gain:
+    if args.use_gain and not val:
+        # Validation入力画像をGAINのままにするとマスクされた画像から評価されてしまう
+        # そのためValidation時はGAIN処理を行わない
         inputs, segment_labels, class_labels = data
         inputs, segment_labels, class_labels = inputs.to(device), segment_labels.to(device), class_labels.to(device)
 
@@ -32,7 +34,7 @@ def calc_loss(data, model, criterion, device, args, val=False):
         segment_outputs_2nd = model(inputs)["out"]
         segment_loss = criterion(segment_outputs_2nd, segment_labels)
 
-        loss = classloss + miningloss + segment_loss
+        loss = classloss + args.alpha * miningloss + args.omega * segment_loss
 
         outputs = segment_outputs_2nd
 
