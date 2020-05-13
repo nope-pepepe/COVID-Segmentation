@@ -59,7 +59,7 @@ class CovidDataset(torch.utils.data.Dataset):
 
         self.img, self.segment_label = self._ChangeImgShape(img, label, channel)
 
-        if mask_img:
+        if mask_img and mode!="val":
             self.img, self.class_label, self.segment_label = self._mask(self.img, self.segment_label)
         else:
             self.class_label = None
