@@ -42,11 +42,9 @@ c/w     : class weight採用
 
 ←GT  予測→
 ## 結果表示コード
-demo.py -r [ディレクトリ名]
+demo.py -r [ディレクトリ名] --model [モデル名]
 
-ディレクトリ名は2020~みたいなやつだけ指定すれば大丈夫です。
+ディレクトリ名は2020~みたいなやつだけ指定してください。
 
 ## その他
-Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です(30×512×512の計算を行っているため)。
-
-[このへんのモジュール](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html)をmodule/calc_iou.pyのconfusion matrix計算関数あたりと入れ替えたら早くなるかも
+Validation時Confusion Matrix計算で1Epochあたり10分弱食いますが仕様です。
