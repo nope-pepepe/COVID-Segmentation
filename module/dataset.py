@@ -125,17 +125,21 @@ class CovidDataset(torch.utils.data.Dataset):
 
         return maskArray, labelArray, segment_labelArray
 
-    def get_weight(self, softmax=False):
-        num_classes = self.segment_label.max()+1
-        weights = torch.zeros(num_classes)
-        for i in range(num_classes):
-            num_pix = np.count_nonzero(self.segment_label==i)
-            weights[i] = num_pix
+    def get_weight(self, softmax=False, force_value=False):
+        if force_value:
+            weights = torch.Tensor([0.0013, 0.0261, 0.0501, 1.0000])
+        
+        else:
+            num_classes = self.segment_label.max()+1
+            weights = torch.zeros(num_classes)
+            for i in range(num_classes):
+                num_pix = np.count_nonzero(self.segment_label==i)
+                weights[i] = num_pix
 
-        weights /= weights.min()
-        weights = 1 / weights
-        if softmax:
-            weights = torch.nn.functional.softmax(weights, dim=0)
+            weights /= weights.min()
+            weights = 1 / weights
+            if softmax:
+                weights = torch.nn.functional.softmax(weights, dim=0)
         print("class weight:" + str(weights))
         return weights
 
