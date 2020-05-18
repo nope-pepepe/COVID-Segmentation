@@ -83,7 +83,7 @@ def main():
     """
 
     # class weight設定
-    start_weight = trainset.get_weight(args.weight_softmax) if args.weight else None
+    start_weight = trainset.get_weight(args.weight_softmax, force_value=args.use_gain) if args.weight else None
     target_weight = trainset.get_weight(True) if args.control_weight and not args.weight_softmax else None
     get_criterion = GetCriterion(args.loss, start_weight=start_weight, target=target_weight, n_epoch=args.epoch)
 
