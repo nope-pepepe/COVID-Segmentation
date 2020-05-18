@@ -27,6 +27,7 @@ def train_opts():
     parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
     parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
     parser.add_argument("--use-gain", action="store_true", help="Use GAIN")
+    parser.add_argument("--lambda1", type=float, default=1.0, help="GAINにおける cl lossの係数 論文ではデフォルト1.0")
     parser.add_argument("--alpha", type=float, default=1.0, help="GAINにおける attention mining lossの係数 論文ではデフォルト1.0")
     parser.add_argument("--omega", type=float, default=10.0, help="GAINにおける segmentation lossの係数 論文ではデフォルト10.0")
     

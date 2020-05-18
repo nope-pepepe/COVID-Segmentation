@@ -24,7 +24,7 @@ def calc_loss(data, model, criterion, device, args, val=False):
             segment_outputs_1st, class_outputs = outputs_data["out"], outputs_data["class"]
             if len(class_outputs.size()) == 1:
                 class_outputs = class_outputs.unsqueeze(0)
-            classloss = nn.CrossEntropyLoss()(class_outputs, class_labels)
+            classloss = F.cross_entropy(class_outputs, class_labels)
 
             mask_inputs = mask(torch.max(segment_outputs_1st.data, 1)[1], inputs, segment_labels)
             miningloss = model(mask_inputs)["class"].sigmoid().mean()
@@ -34,7 +34,7 @@ def calc_loss(data, model, criterion, device, args, val=False):
         segment_outputs_2nd = model(inputs)["out"]
         segment_loss = criterion(segment_outputs_2nd, segment_labels)
 
-        loss = classloss + args.alpha * miningloss + args.omega * segment_loss
+        loss = args.lambda1 * classloss + args.alpha * miningloss + args.omega * segment_loss
 
         outputs = segment_outputs_2nd
 
