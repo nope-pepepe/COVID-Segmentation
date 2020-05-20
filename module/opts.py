@@ -44,6 +44,7 @@ def demo_opts():
     parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
     parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
+    parser.add_argument("--backbone", type=str, default="efficientnet-b4", help="EfficientDeeplabのバックボーン選択")
     
     args = parser.parse_args()
 
