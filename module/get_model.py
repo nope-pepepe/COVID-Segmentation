@@ -10,7 +10,7 @@ from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 
 from collections import OrderedDict
 
-from module.unet import UNet
+from module.unet import UNet, EfficientUNet
 
 from efficientnet_pytorch import EfficientNet
 
@@ -36,6 +36,9 @@ def get_model(args, num_classes):
     
     elif args.model == "EfficientDeeplab":
         model = efficient_deeplabv3(args)
+    
+    elif args.model == "EfficientUNet":
+        model = efficient_unet(args)
     
     else:
         print("no such a model")
@@ -88,14 +91,16 @@ class EfficientNetExtractor(EfficientNet):
 def efficient_deeplabv3(args):
     # args.backbone には 'efficientnet-b0'などが入る
     efficientnet = EfficientNetExtractor.from_name(args.backbone, in_channels=1)
-    #device = torch.device("cuda:{}".format(args.gpu))
-    #efficientnet = efficientnet.to(device)
-    
-    #backbone = efficientnet.extract_features
+
     num_ch = efficientnet._conv_head.out_channels
     classifier = DeepLabHead(num_ch, args.num_classes)
     base_model = Deeplabv3
     model = base_model(efficientnet, classifier)
+    return model
+
+def efficient_unet(args):
+    # args.backbone には 'efficientnet-b0'などが入る
+    model = EfficientUNet.from_name(args.backbone, in_channels=1)
     return model
 
 if __name__ == "__main__":

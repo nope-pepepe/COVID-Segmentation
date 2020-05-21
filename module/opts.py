@@ -10,7 +10,7 @@ def train_opts():
     parser.add_argument("-b", "--batchsize", type=int, default=4, help="ミニバッチサイズ")
     parser.add_argument("-lr", "--learningrate", type=float, default=0.001, help="学習率")
     parser.add_argument("-m", "--model", type=str, default="Deeplab",
-                        choices=["Deeplab", "UNet","EfficientDeeplab"])
+                        choices=["Deeplab", "UNet", "EfficientDeeplab", "EfficientUNet"])
     parser.add_argument("-o", "--optimizer", type=str, default="SGD",
                         choices=["SGD", "Adam"])
     parser.add_argument("-l", "--loss", type=str, default="CE",
@@ -25,7 +25,7 @@ def train_opts():
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
     parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
-    parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
+    parser.add_argument("--save_dir", type=str, default="results", help="保存ディレクトリのパス")
     parser.add_argument("--backbone", type=str, default="efficientnet-b4", help="EfficientDeeplabのバックボーン選択")
 
     args = parser.parse_args()
@@ -37,7 +37,7 @@ def demo_opts():
     parser.add_argument("-g", "--gpu", type=int, default=0, help="使用GPU番号 空き状況はnvidia-smiで調べる")
     parser.add_argument("-b", "--batchsize", type=int, default=1, help="ミニバッチサイズ")
     parser.add_argument("-m", "--model", type=str, default="Deeplab",
-                        choices=["Deeplab", "UNet","EfficientDeeplab"])
+                        choices=["Deeplab", "UNet", "EfficientDeeplab", "EfficientUNet"])
     parser.add_argument("-r", "--readdir", type=str, default=None, help="読み出すディレクトリ名")
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
