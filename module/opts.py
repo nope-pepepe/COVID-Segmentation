@@ -12,10 +12,11 @@ def train_opts():
     parser.add_argument("-m", "--model", type=str, default="Deeplab",
                         choices=["Deeplab", "UNet", "EfficientDeeplab", "EfficientUNet"])
     parser.add_argument("-o", "--optimizer", type=str, default="SGD",
-                        choices=["SGD", "Adam"])
+                        choices=["SGD", "Adam", "RMSprop"])
     parser.add_argument("-l", "--loss", type=str, default="CE",
                         choices=["CE", "focal"])
     parser.add_argument("--scheduler", action="store_true", help="Use Scheduler")
+    parser.add_argument("--gamma", type=float, default=0.1, help="schedulerの削減率")
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
     parser.add_argument("--weight", action="store_false", help="Use class weight")
     parser.add_argument("--weight-softmax", action="store_true", help="Use class weight with softmax")
@@ -27,6 +28,7 @@ def train_opts():
     parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
     parser.add_argument("--save_dir", type=str, default="results", help="保存ディレクトリのパス")
     parser.add_argument("--backbone", type=str, default="efficientnet-b4", help="EfficientDeeplabのバックボーン選択")
+    parser.add_argument("--use-scse", action="store_true", help="Use scSE")
 
     args = parser.parse_args()
 
@@ -45,7 +47,8 @@ def demo_opts():
     parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
     parser.add_argument("-pre", "--pretrained", action="store_true", help="Use Pretrained model")
     parser.add_argument("--backbone", type=str, default="efficientnet-b4", help="EfficientDeeplabのバックボーン選択")
-    
+    parser.add_argument("--use-scse", action="store_true", help="Use scSE")
+  
     args = parser.parse_args()
 
     args.dropout = False

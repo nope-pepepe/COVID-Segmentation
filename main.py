@@ -90,6 +90,8 @@ def main():
         optimizer = optim.SGD(net.parameters(), lr=args.learningrate, momentum=0.9)
     elif args.optimizer == "Adam":
         optimizer = optim.Adam(net.parameters(), lr=args.learningrate)
+    elif args.optimizer == "RMSprop":
+        optimizer = optim.RMSprop(net.parameters(), lr=args.learningrate)
     else:
         print("Can't set optimizer")
         exit()
