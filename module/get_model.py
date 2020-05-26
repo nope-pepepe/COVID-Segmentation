@@ -32,17 +32,13 @@ def get_model(args, num_classes):
             )
 
     elif args.model == "UNet":
-<<<<<<< HEAD
-        model = UNet(1, num_classes, dropout=args.dropout, use_gain=args.use_gain)
-=======
-        model = UNet(1, num_classes, dropout=args.dropout, use_scSE=args.use_scse)
+        model = UNet(1, num_classes, dropout=args.dropout, use_scSE=args.use_scse, use_gain=args.use_gain)
     
     elif args.model == "EfficientDeeplab":
         model = efficient_deeplabv3(args)
     
     elif args.model == "EfficientUNet":
         model = efficient_unet(args)
->>>>>>> develop
     
     else:
         print("no such a model")

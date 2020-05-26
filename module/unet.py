@@ -103,11 +103,7 @@ class OutConv(nn.Module):
         return self.conv(x)
 
 class UNet(nn.Module):
-<<<<<<< HEAD
-    def __init__(self, n_ch, n_classes, bilinear=False, dropout=True, use_gain=False):
-=======
-    def __init__(self, n_ch, n_classes, bilinear=False, dropout=True, use_scSE=False):
->>>>>>> develop
+    def __init__(self, n_ch, n_classes, bilinear=False, dropout=True, use_scSE=False, use_gain=False):
         super(UNet, self).__init__()
         self.n_ch = n_ch
         self.n_classes = n_classes
@@ -205,10 +201,8 @@ class EfficientUNet(EfficientNet):
         return model
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     model = UNet(1, 4, use_gain=True)
     print(model)
-=======
     from torchsummary import summary
     model = EfficientUNet.from_name("efficientnet-b4", in_channels=1, n_classes=4, use_scSE=True)
     img = torch.rand(2,1,512,512)
@@ -218,4 +212,3 @@ if __name__ == "__main__":
     #print(model)
     #print(model.hoge)
     #print(summary(model, (1,512,512), device="cpu"))
->>>>>>> develop

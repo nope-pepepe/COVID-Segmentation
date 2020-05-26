@@ -26,20 +26,15 @@ def train_opts():
     parser.add_argument("--num-worker", type=int, default=4, help="CPU同時稼働数 あまり気にしなくてよい")
     parser.add_argument("--modelname", type=str, default="bestmodel.pth", help="保存モデル名")
     parser.add_argument("--root_dir", type=str, default="dataset", help="データセットまでのパス")
-<<<<<<< HEAD
     parser.add_argument("--save_dir", type=str, default="results", help="データセットまでのパス")
     parser.add_argument("--use-gain", action="store_true", help="Use GAIN")
     parser.add_argument("--lambda1", type=float, default=1.0, help="GAINにおける cl lossの係数 論文ではデフォルト1.0")
     parser.add_argument("--alpha", type=float, default=1.0, help="GAINにおける attention mining lossの係数 論文ではデフォルト1.0")
     parser.add_argument("--omega", type=float, default=10.0, help="GAINにおける segmentation lossの係数 論文ではデフォルト10.0")
     
-    
-=======
-    parser.add_argument("--save_dir", type=str, default="results", help="保存ディレクトリのパス")
     parser.add_argument("--backbone", type=str, default="efficientnet-b4", help="EfficientDeeplabのバックボーン選択")
     parser.add_argument("--use-scse", action="store_true", help="Use scSE")
 
->>>>>>> develop
     args = parser.parse_args()
 
     return args
