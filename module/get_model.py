@@ -32,7 +32,7 @@ def get_model(args, num_classes):
             )
 
     elif args.model == "UNet":
-        model = UNet(1, num_classes, dropout=args.dropout)
+        model = UNet(1, num_classes, dropout=args.dropout, use_scSE=args.use_scse)
     
     elif args.model == "EfficientDeeplab":
         model = efficient_deeplabv3(args)
@@ -100,7 +100,7 @@ def efficient_deeplabv3(args):
 
 def efficient_unet(args):
     # args.backbone には 'efficientnet-b0'などが入る
-    model = EfficientUNet.from_name(args.backbone, in_channels=1)
+    model = EfficientUNet.from_name(args.backbone, in_channels=1, n_classes=args.num_classes, use_scSE=args.use_scse)
     return model
 
 if __name__ == "__main__":
