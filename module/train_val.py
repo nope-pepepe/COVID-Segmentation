@@ -24,7 +24,13 @@ def calc_loss(data, model, criterion, device, args, val=False):
             segment_outputs_1st, class_outputs = outputs_data["out"], outputs_data["class"]
             if len(class_outputs.size()) == 1:
                 class_outputs = class_outputs.unsqueeze(0)
-            classloss = F.cross_entropy(class_outputs, class_labels)
+
+            if args.use_mask:
+                # mask画像から単一クラス予測
+                classloss = F.cross_entropy(class_outputs, class_labels)
+            else:
+                # multi label soft margin loss
+                classloss = F.multilabel_soft_margin_loss(class_outputs, class_labels)
 
             mask_inputs = mask(torch.max(segment_outputs_1st.data, 1)[1], inputs, segment_labels)
             miningloss = model(mask_inputs)["class"].sigmoid().mean()

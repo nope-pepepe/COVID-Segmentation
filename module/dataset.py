@@ -18,7 +18,7 @@ def min_max(x, axis=None):
     return result
 
 class CovidDataset(torch.utils.data.Dataset):
-    def __init__(self, mode="train", root_dir="dataset", transform=None, channel=1, mask_img=False):
+    def __init__(self, mode="train", root_dir="dataset", transform=None, channel=1, gain=False, mask_img=False):
         """
         mode     : train or val
         root_dir : 画像までのパス
@@ -59,8 +59,12 @@ class CovidDataset(torch.utils.data.Dataset):
 
         self.img, self.segment_label = self._ChangeImgShape(img, label, channel)
 
-        if mask_img and mode!="val":
-            self.img, self.class_label, self.segment_label = self._mask(self.img, self.segment_label)
+        if gain and mode!="val":
+            if mask_img:
+                self.img, self.class_label, self.segment_label = self._mask(self.img, self.segment_label)
+            else:
+                self.class_label = self._getMultiLabel(self.segment_label)
+
         else:
             self.class_label = None
 
@@ -94,6 +98,17 @@ class CovidDataset(torch.utils.data.Dataset):
             labelArray[i] = np.fliplr(np.rot90(label[i], k=3))
 
         return imgArray, labelArray
+
+    def _getMultiLabel(self, segmentlabel):
+        labelArray = []
+        for i in range(len(self)):
+            image_class = [0]*3
+            for lbl in range(3):
+                if np.any(segmentlabel[i]==(lbl+1)):    # 背景は除く
+                    image_class[lbl] = 1
+            labelArray.append(image_class)
+        labelArray = np.asarray(labelArray)
+        return labelArray
 
     def _mask(self, imgArray, label):
         maskArray = []
@@ -162,4 +177,4 @@ class CovidDataset(torch.utils.data.Dataset):
             return img
 
 if __name__ == "__main__":
-    dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=3, mask_img=True)
+    dataset = CovidDataset(mode="train", root_dir="../dataset/", channel=1, gain=True)

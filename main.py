@@ -61,7 +61,8 @@ def main():
                             root_dir=args.root_dir,
                             transform=transform,
                             channel=channel,
-                            mask_img=args.use_gain)
+                            gain=args.use_gain,
+                            mask_img=args.use_mask)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batchsize,
                                             shuffle=True, num_workers=args.num_worker)
 
@@ -69,7 +70,8 @@ def main():
                             root_dir=args.root_dir,
                             transform=transform,
                             channel=channel,
-                            mask_img=args.use_gain)
+                            gain=args.use_gain,
+                            mask_img=args.use_mask)
     valloader = torch.utils.data.DataLoader(valset, batch_size=args.batchsize,
                                             shuffle=False, num_workers=args.num_worker)
     
