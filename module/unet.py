@@ -6,8 +6,11 @@ import torch.nn as nn
 
 import torch.nn.functional as F
 
+from efficientnet_pytorch import EfficientNet
+from squeeze_and_excitation.squeeze_and_excitation import ChannelSpatialSELayer as scSE
+
 class DoubleConv(nn.Module):
-    def __init__(self, in_ch, out_ch, mid_ch=None, dropout=True):
+    def __init__(self, in_ch, out_ch, mid_ch=None, dropout=False, use_scSE=False):
         super().__init__()
         if not mid_ch:
             mid_ch = out_ch
@@ -23,6 +26,17 @@ class DoubleConv(nn.Module):
                 nn.Dropout(0.25)
             )
         
+        elif use_scSE:
+            self.double_conv = nn.Sequential(
+                nn.Conv2d(in_ch, mid_ch, kernel_size=3, padding=1),
+                nn.BatchNorm2d(mid_ch),
+                nn.ReLU(inplace=True),
+                scSE(mid_ch, reduction_ratio=8),
+                nn.Conv2d(mid_ch, out_ch, kernel_size=3, padding=1),
+                nn.BatchNorm2d(out_ch),
+                nn.ReLU(inplace=True)
+            )
+
         else:
             self.double_conv = nn.Sequential(
                 nn.Conv2d(in_ch, mid_ch, kernel_size=3, padding=1),
@@ -52,7 +66,7 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_ch, out_ch, bilinear=False, dropout=True):
+    def __init__(self, in_ch, out_ch, conv_in_ch=None,  bilinear=False, dropout=True, use_scSE=False):
         super().__init__()
 
         # if bilinear, use the normal convolutions to reduce the number of ch
@@ -61,7 +75,13 @@ class Up(nn.Module):
             self.conv = DoubleConv(in_ch, out_ch, in_ch // 2)
         else:
             self.up = nn.ConvTranspose2d(in_ch , in_ch // 2, kernel_size=2, stride=2)
-            self.conv = DoubleConv(in_ch, out_ch, dropout=dropout)
+            if conv_in_ch is not None:
+                # 数を無理やり合わせる用(Efficient UNet)
+                self.conv = DoubleConv(conv_in_ch, out_ch, dropout=dropout, use_scSE=use_scSE)
+      
+            else:
+                # 普通のUNet
+                self.conv = DoubleConv(in_ch, out_ch, dropout=dropout, use_scSE=use_scSE)
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
@@ -83,7 +103,11 @@ class OutConv(nn.Module):
         return self.conv(x)
 
 class UNet(nn.Module):
+<<<<<<< HEAD
     def __init__(self, n_ch, n_classes, bilinear=False, dropout=True, use_gain=False):
+=======
+    def __init__(self, n_ch, n_classes, bilinear=False, dropout=True, use_scSE=False):
+>>>>>>> develop
         super(UNet, self).__init__()
         self.n_ch = n_ch
         self.n_classes = n_classes
@@ -96,10 +120,10 @@ class UNet(nn.Module):
         self.down3 = Down(256, 512, dropout=dropout)
         factor = 2 if bilinear else 1
         self.down4 = Down(512, 1024 // factor, dropout=dropout)
-        self.up1 = Up(1024, 512 // factor, bilinear, dropout=dropout)
-        self.up2 = Up(512, 256 // factor, bilinear, dropout=dropout)
-        self.up3 = Up(256, 128 // factor, bilinear, dropout=dropout)
-        self.up4 = Up(128, 64, bilinear, dropout=dropout)
+        self.up1 = Up(1024, 512 // factor, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+        self.up2 = Up(512, 256 // factor, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+        self.up3 = Up(256, 128 // factor, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+        self.up4 = Up(128, 64, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
         self.outc = OutConv(64, n_classes)
         self.classification = OutConv(64, n_classes-1)
 
@@ -120,6 +144,78 @@ class UNet(nn.Module):
         else:
             return {"out":logits}
 
+class EfficientUNet(EfficientNet):
+    def __init__(self, blocks_args=None, global_params=None, model_name="efficientnet-b4",
+     bilinear=False, dropout=False, n_classes=4, use_scSE=False):
+        
+        super().__init__(blocks_args, global_params)
+        self.downSamplingLayer = self._getDownSamplingLayer(model_name)
+
+        self.up1 = Up(448, 272, conv_in_ch=384, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+        self.up2 = Up(272, 112, conv_in_ch=192, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+        self.up3 = Up(112, 56, conv_in_ch=88, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+        self.up4 = Up(56, 32, conv_in_ch=52, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+
+        self.up_last = Up(32, 32, conv_in_ch=17, bilinear=bilinear, dropout=dropout, use_scSE=use_scSE)
+
+        self.outc = OutConv(32, n_classes)
+
+    def _getDownSamplingLayer(self, model_name):
+        if model_name == "efficientnet-b4":
+            # DownSamplingするMBConvの一つ前の場所を返す(0start)
+            return [1, 5, 9, 21]
+        else:
+            raise Exception("efficientnet-b4以外未対応です")
+
+    def forward(self, inputs):
+        # skip connection用レイヤを貯めるところ
+        hidden_layers = []
+        x = self._swish(self._bn0(self._conv_stem(inputs)))
+        for idx, block in enumerate(self._blocks):
+            drop_connect_rate = self._global_params.drop_connect_rate
+            if drop_connect_rate:
+                drop_connect_rate *= float(idx) / len(self._blocks) # scale drop connect_rate
+            x = block(x, drop_connect_rate=drop_connect_rate)
+
+            if idx in self.downSamplingLayer:
+                hidden_layers.append(x)
+        # UNetのDecoder部分
+        for idx, h in enumerate(reversed(hidden_layers)):
+            # リストにすると動かないので泣く泣くこの形に 誰かいい方法教えてください
+            if idx == 0:
+                x = self.up1(x, h)
+            elif idx == 1:
+                x = self.up2(x, h)
+            elif idx == 2:
+                x = self.up3(x, h)
+            elif idx == 3:
+                x = self.up4(x, h)        
+        x = self.up_last(x, inputs)
+
+        logits = self.outc(x)
+        return {"out":logits}
+
+    @classmethod
+    def from_name(cls, model_name, in_channels=3, n_classes=4, use_scSE=False, **override_params):
+        from efficientnet_pytorch.utils import get_model_params
+        cls._check_model_name_is_valid(model_name)
+        blocks_args, global_params = get_model_params(model_name, override_params)
+        model = cls(blocks_args, global_params, n_classes=n_classes, use_scSE=use_scSE)
+        model._change_in_channels(in_channels)
+        return model
+
 if __name__ == "__main__":
+<<<<<<< HEAD
     model = UNet(1, 4, use_gain=True)
     print(model)
+=======
+    from torchsummary import summary
+    model = EfficientUNet.from_name("efficientnet-b4", in_channels=1, n_classes=4, use_scSE=True)
+    img = torch.rand(2,1,512,512)
+    #model = UNet(1, 4, use_scSE=False)
+    #model(img)
+    print(model)
+    #print(model)
+    #print(model.hoge)
+    #print(summary(model, (1,512,512), device="cpu"))
+>>>>>>> develop
