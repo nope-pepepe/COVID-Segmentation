@@ -23,7 +23,7 @@ from module.train_val import train, validation
 from module.dataset import CovidDataset
 from module.get_model import get_model
 from module.classes import CLASSES
-from module.logger import LogIoU, logOption
+from module.logger import LogIoU, logOption, LogGAINLoss
 from module.opts import train_opts
 from module.loss import GetCriterion
 
@@ -109,12 +109,16 @@ def main():
     """
     max_miou = 0.0
     vallogger = LogIoU(savedir)
+    losslogger = LogGAINLoss(savedir)
 
     for epoch in range(args.epoch):
         criterion = get_criterion(device)
 
         train(net, trainloader, optimizer, device, criterion, epoch, args)
-        iou, miou = validation(net, valloader, device, criterion, args)
+        sample = validation(net, valloader, device, criterion, args)
+        iou = sample["iou"]
+        miou = sample["miou"]
+        
         if args.scheduler:
             scheduler.step()
 
@@ -123,6 +127,7 @@ def main():
             torch.save(net.state_dict(), os.path.join(savedir, args.modelname))
 
         vallogger(epoch, miou, iou)
+        losslogger(epoch, sample)
 
     print('Finished Training')
 
