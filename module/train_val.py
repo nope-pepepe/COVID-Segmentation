@@ -81,12 +81,20 @@ def calc_loss(data, model, criterion, device, args, val=False):
 
 def train(model, trainloader, optimizer, device, criterion, epoch, args):
     model.train()   #model訓練モードへ移行
-    running_loss = 0.0  #epoch毎の誤差合計
+    running_loss = 0.  #epoch毎の誤差合計
+
+    loss_cl = SumLoss() #GAINのみで使う
+    loss_am = SumLoss() #GAINのみで使う
+    loss_seg = SumLoss() #GAINのみで使う
 
     for i, data in enumerate(trainloader):
         #出力計算
         sample = calc_loss(data, model, criterion, device, args)
         loss = sample["loss"]
+        if args.use_gain:
+            loss_cl(sample["l_cl"].item())
+            loss_am(sample["l_am"].item())
+            loss_seg(sample["l_seg"].item())
         
         #勾配計算とOptimStep
         optimizer.zero_grad()
@@ -96,13 +104,16 @@ def train(model, trainloader, optimizer, device, criterion, epoch, args):
     
     print("Train Epoch:{:>3} Loss:{:.4f}".format(epoch, running_loss))
 
+    return_data = { "loss":running_loss,
+                    "l_cl":loss_cl.running_loss,
+                    "l_am":loss_am.running_loss,
+                    "l_seg":loss_seg.running_loss}
+
+    return return_data
+
 def validation(model, valloader, device, criterion, args):
     model.eval()    #モデル推論モードへ移行
-    total_loss = SumLoss()  #epoch毎の誤差合計
-    
-    loss_cl = SumLoss() #GAINのみで使う
-    loss_am = SumLoss() #GAINのみで使う
-    loss_seg = SumLoss() #GAINのみで使う
+    total_loss = SumLoss()
 
     with torch.no_grad():   #勾配計算を行わない状態
         for i, data in enumerate(valloader):
@@ -110,10 +121,6 @@ def validation(model, valloader, device, criterion, args):
 
             loss = sample["loss"]
             outputs = sample["outputs"]
-            if args.use_gain:
-                loss_cl(sample["l_cl"].item())
-                loss_am(sample["l_am"].item())
-                loss_seg(sample["l_seg"].item())
 
             #iou計算
             _, predicted = torch.max(outputs.data, 1)
@@ -132,10 +139,7 @@ def validation(model, valloader, device, criterion, args):
         miou = torch.mean(iou)
 
         return_data = {"iou":iou, "miou":miou,
-                       "loss":total_loss.running_loss,
-                       "l_cl":loss_cl.running_loss,
-                       "l_am":loss_am.running_loss,
-                       "l_seg":loss_seg.running_loss}
+                       "loss":total_loss.running_loss}
 
         print("mIoU:{:3.1f}% Loss:{:.4f}".format(miou*100, total_loss.running_loss))
 

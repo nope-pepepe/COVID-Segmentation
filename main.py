@@ -114,8 +114,8 @@ def main():
     for epoch in range(args.epoch):
         criterion = get_criterion(device)
 
-        train(net, trainloader, optimizer, device, criterion, epoch, args)
-        sample = validation(net, valloader, device, criterion, args)
+        train_sample = train(net, trainloader, optimizer, device, criterion, epoch, args)
+        val_sample = validation(net, valloader, device, criterion, args)
         iou = sample["iou"]
         miou = sample["miou"]
         
@@ -127,7 +127,7 @@ def main():
             torch.save(net.state_dict(), os.path.join(savedir, args.modelname))
 
         vallogger(epoch, miou, iou)
-        losslogger(epoch, sample)
+        losslogger(epoch, train_sample)
 
     print('Finished Training')
 
