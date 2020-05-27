@@ -19,14 +19,16 @@ def mask(pred, inputs, labels):
     return inputs
 
 def softmask(inputs, image, omega=100, sigma=0.25):
+
+    inputs = inputs.sum(dim=1, keepdim=True)
+    inputs = F.relu(inputs)
+
     inputs_min = inputs.min()
     inputs_max = inputs.max()
     scaled_inputs = (inputs - inputs_min) / (inputs_max - inputs_min)
 
     mask = F.sigmoid(omega * (scaled_inputs - sigma))
 
-    hoge = image*mask 
-    print(hoge[0][0][0][0], hoge[0][1][0][0], hoge[0][2][0][0])
     masked_image = image - image * mask
     
     return masked_image
@@ -52,8 +54,10 @@ def calc_loss(data, model, criterion, device, args, val=False):
                 # multi label soft margin loss
                 classloss = F.multilabel_soft_margin_loss(class_outputs, class_labels)
 
-            mask_inputs = mask(torch.max(segment_outputs_1st.data, 1)[1], inputs, segment_labels)
-            #mask_inputs = softmask(inputs=segment_outputs_1st, image=inputs)
+            if args.use_softmask:
+                mask_inputs = softmask(inputs=segment_outputs_1st, image=inputs)
+            else:
+                mask_inputs = mask(torch.max(segment_outputs_1st.data, 1)[1], inputs, segment_labels)
             miningloss = model(mask_inputs)["class"].sigmoid().mean()
 
         if not val:
