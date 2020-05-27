@@ -116,8 +116,8 @@ def main():
 
         train_sample = train(net, trainloader, optimizer, device, criterion, epoch, args)
         val_sample = validation(net, valloader, device, criterion, args)
-        iou = sample["iou"]
-        miou = sample["miou"]
+        iou = val_sample["iou"]
+        miou = val_sample["miou"]
         
         if args.scheduler:
             scheduler.step()
