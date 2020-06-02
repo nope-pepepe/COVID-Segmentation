@@ -125,6 +125,7 @@ def main():
         #validationの成績が良ければモデルを保存
         if miou > max_miou:
             torch.save(net.state_dict(), os.path.join(savedir, args.modelname))
+            max_miou = miou
 
         vallogger(epoch, miou, iou)
         losslogger(epoch, train_sample)
